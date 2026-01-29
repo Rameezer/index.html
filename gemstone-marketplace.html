@@ -1,0 +1,1321 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Digital Carat - Gemstone NFT Marketplace</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #1e1e2e 0%, #2d1b4e 100%);
+            color: #ffffff;
+            min-height: 100vh;
+        }
+
+        .header {
+            background: rgba(0, 0, 0, 0.3);
+            padding: 1.5rem 2rem;
+            border-bottom: 2px solid #7c3aed;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .logo {
+            font-size: 2rem;
+            font-weight: bold;
+            background: linear-gradient(90deg, #a78bfa, #ec4899);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+        }
+
+        .wallet-btn {
+            background: linear-gradient(135deg, #7c3aed, #ec4899);
+            border: none;
+            padding: 0.75rem 1.5rem;
+            border-radius: 8px;
+            color: white;
+            font-weight: 600;
+            cursor: pointer;
+            transition: transform 0.2s;
+        }
+
+        .wallet-btn:hover {
+            transform: scale(1.05);
+        }
+
+        .nav {
+            background: rgba(0, 0, 0, 0.2);
+            padding: 1rem 2rem;
+            display: flex;
+            gap: 2rem;
+        }
+
+        .nav-btn {
+            background: transparent;
+            border: none;
+            color: #a78bfa;
+            font-size: 1rem;
+            cursor: pointer;
+            padding: 0.5rem 1rem;
+            border-radius: 6px;
+            transition: all 0.3s;
+        }
+
+        .nav-btn:hover, .nav-btn.active {
+            background: rgba(167, 139, 250, 0.2);
+            color: white;
+        }
+
+        .container {
+            max-width: 1400px;
+            margin: 0 auto;
+            padding: 2rem;
+        }
+
+        .page {
+            display: none;
+        }
+
+        .page.active {
+            display: block;
+        }
+
+        .grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(320px, 1fr));
+            gap: 2rem;
+            margin-top: 2rem;
+        }
+
+        .nft-card {
+            background: rgba(255, 255, 255, 0.05);
+            border-radius: 16px;
+            overflow: hidden;
+            border: 1px solid rgba(167, 139, 250, 0.3);
+            transition: transform 0.3s, box-shadow 0.3s;
+            cursor: pointer;
+        }
+
+        .nft-card:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 10px 30px rgba(167, 139, 250, 0.3);
+        }
+
+        .nft-image {
+            width: 100%;
+            height: 250px;
+            object-fit: cover;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        }
+
+        .nft-content {
+            padding: 1.5rem;
+        }
+
+        .nft-title {
+            font-size: 1.3rem;
+            font-weight: 600;
+            margin-bottom: 0.5rem;
+        }
+
+        .nft-description {
+            color: #a78bfa;
+            font-size: 0.9rem;
+            margin-bottom: 1rem;
+        }
+
+        .nft-details {
+            display: flex;
+            justify-content: space-between;
+            margin-bottom: 1rem;
+            padding-top: 1rem;
+            border-top: 1px solid rgba(167, 139, 250, 0.2);
+        }
+
+        .detail-item {
+            text-align: center;
+        }
+
+        .detail-label {
+            font-size: 0.8rem;
+            color: #a78bfa;
+            margin-bottom: 0.3rem;
+        }
+
+        .detail-value {
+            font-weight: 600;
+            font-size: 1.1rem;
+        }
+
+        .eth-symbol {
+            color: #627eea;
+        }
+
+        .bid-btn {
+            width: 100%;
+            background: linear-gradient(135deg, #7c3aed, #ec4899);
+            border: none;
+            padding: 0.75rem;
+            border-radius: 8px;
+            color: white;
+            font-weight: 600;
+            cursor: pointer;
+            transition: transform 0.2s;
+        }
+
+        .bid-btn:hover {
+            transform: scale(1.02);
+        }
+
+        .create-form {
+            background: rgba(255, 255, 255, 0.05);
+            border-radius: 16px;
+            padding: 2rem;
+            max-width: 600px;
+            margin: 2rem auto;
+            border: 1px solid rgba(167, 139, 250, 0.3);
+        }
+
+        .form-group {
+            margin-bottom: 1.5rem;
+        }
+
+        .form-label {
+            display: block;
+            margin-bottom: 0.5rem;
+            color: #a78bfa;
+            font-weight: 500;
+        }
+
+        .form-input, .form-textarea {
+            width: 100%;
+            padding: 0.75rem;
+            border-radius: 8px;
+            border: 1px solid rgba(167, 139, 250, 0.3);
+            background: rgba(0, 0, 0, 0.3);
+            color: white;
+            font-size: 1rem;
+        }
+
+        .form-textarea {
+            resize: vertical;
+            min-height: 100px;
+        }
+
+        .file-input-wrapper {
+            position: relative;
+            overflow: hidden;
+            display: inline-block;
+            width: 100%;
+        }
+
+        .file-input-btn {
+            background: rgba(167, 139, 250, 0.2);
+            border: 2px dashed rgba(167, 139, 250, 0.5);
+            padding: 2rem;
+            text-align: center;
+            cursor: pointer;
+            border-radius: 8px;
+            transition: all 0.3s;
+        }
+
+        .file-input-btn:hover {
+            background: rgba(167, 139, 250, 0.3);
+        }
+
+        .file-input-wrapper input[type=file] {
+            position: absolute;
+            left: -9999px;
+        }
+
+        .submit-btn {
+            width: 100%;
+            background: linear-gradient(135deg, #7c3aed, #ec4899);
+            border: none;
+            padding: 1rem;
+            border-radius: 8px;
+            color: white;
+            font-weight: 600;
+            font-size: 1.1rem;
+            cursor: pointer;
+            transition: transform 0.2s;
+        }
+
+        .submit-btn:hover {
+            transform: scale(1.02);
+        }
+
+        .modal {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0, 0, 0, 0.8);
+            z-index: 1000;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .modal.active {
+            display: flex;
+        }
+
+        .modal-content {
+            background: linear-gradient(135deg, #1e1e2e 0%, #2d1b4e 100%);
+            border-radius: 16px;
+            padding: 2rem;
+            max-width: 500px;
+            width: 90%;
+            border: 2px solid #7c3aed;
+        }
+
+        .modal-header {
+            font-size: 1.5rem;
+            font-weight: 600;
+            margin-bottom: 1.5rem;
+        }
+
+        .close-btn {
+            float: right;
+            background: none;
+            border: none;
+            color: #a78bfa;
+            font-size: 1.5rem;
+            cursor: pointer;
+        }
+
+        .timer {
+            background: rgba(236, 72, 153, 0.2);
+            padding: 0.5rem 1rem;
+            border-radius: 6px;
+            display: inline-block;
+            margin-bottom: 1rem;
+        }
+
+        .hero {
+            text-align: center;
+            padding: 3rem 0;
+        }
+
+        .hero-title {
+            font-size: 3rem;
+            margin-bottom: 1rem;
+            background: linear-gradient(90deg, #a78bfa, #ec4899);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+        }
+
+        .hero-subtitle {
+            font-size: 1.2rem;
+            color: #a78bfa;
+            margin-bottom: 2rem;
+        }
+
+        .stat-card {
+            background: rgba(255, 255, 255, 0.05);
+            border: 1px solid rgba(167, 139, 250, 0.3);
+            border-radius: 12px;
+            padding: 1.5rem;
+            transition: transform 0.3s;
+        }
+
+        .stat-card:hover {
+            transform: translateY(-3px);
+            border-color: rgba(167, 139, 250, 0.6);
+        }
+
+        .stat-label {
+            color: #a78bfa;
+            font-size: 0.9rem;
+            margin-bottom: 0.5rem;
+        }
+
+        .stat-value {
+            font-size: 2rem;
+            font-weight: 700;
+            margin-bottom: 0.5rem;
+        }
+
+        .stat-change {
+            font-size: 0.9rem;
+            color: #9ca3af;
+        }
+
+        .stat-change.positive {
+            color: #10b981;
+        }
+
+        .activity-container {
+            background: rgba(255, 255, 255, 0.05);
+            border: 1px solid rgba(167, 139, 250, 0.3);
+            border-radius: 12px;
+            overflow: hidden;
+        }
+
+        .activity-item {
+            display: flex;
+            align-items: center;
+            gap: 1rem;
+            padding: 1.25rem 1.5rem;
+            border-bottom: 1px solid rgba(167, 139, 250, 0.1);
+            transition: background 0.2s;
+        }
+
+        .activity-item:last-child {
+            border-bottom: none;
+        }
+
+        .activity-item:hover {
+            background: rgba(167, 139, 250, 0.1);
+        }
+
+        .activity-icon {
+            font-size: 1.5rem;
+            width: 40px;
+            height: 40px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            background: rgba(167, 139, 250, 0.2);
+            border-radius: 8px;
+        }
+
+        .activity-details {
+            flex: 1;
+        }
+
+        .activity-title {
+            font-weight: 600;
+            margin-bottom: 0.25rem;
+        }
+
+        .activity-meta {
+            color: #a78bfa;
+            font-size: 0.9rem;
+        }
+
+        .activity-status {
+            padding: 0.4rem 0.8rem;
+            border-radius: 6px;
+            font-size: 0.85rem;
+            font-weight: 600;
+        }
+
+        .activity-status.winning {
+            background: rgba(16, 185, 129, 0.2);
+            color: #10b981;
+        }
+
+        .activity-status.outbid {
+            background: rgba(239, 68, 68, 0.2);
+            color: #ef4444;
+        }
+
+        .activity-time {
+            color: #9ca3af;
+            font-size: 0.85rem;
+            white-space: nowrap;
+        }
+
+        .performance-grid {
+            display: grid;
+            gap: 1.5rem;
+        }
+
+        .performance-card {
+            background: rgba(255, 255, 255, 0.05);
+            border: 1px solid rgba(167, 139, 250, 0.3);
+            border-radius: 12px;
+            display: flex;
+            overflow: hidden;
+            transition: transform 0.3s;
+        }
+
+        .performance-card:hover {
+            transform: translateY(-3px);
+            border-color: rgba(167, 139, 250, 0.6);
+        }
+
+        .performance-image {
+            width: 150px;
+            height: 150px;
+            object-fit: cover;
+        }
+
+        .performance-content {
+            flex: 1;
+            padding: 1.25rem;
+        }
+
+        .performance-title {
+            font-size: 1.2rem;
+            font-weight: 600;
+            margin-bottom: 1rem;
+        }
+
+        .performance-details {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 1rem;
+            margin-bottom: 1rem;
+        }
+
+        .performance-views {
+            color: #a78bfa;
+            font-size: 0.85rem;
+            padding-top: 0.75rem;
+            border-top: 1px solid rgba(167, 139, 250, 0.2);
+        }
+
+        .action-btn {
+            background: rgba(167, 139, 250, 0.2);
+            border: 1px solid rgba(167, 139, 250, 0.4);
+            padding: 0.5rem 1rem;
+            border-radius: 6px;
+            color: white;
+            font-weight: 500;
+            cursor: pointer;
+            transition: all 0.2s;
+            font-size: 0.9rem;
+        }
+
+        .action-btn:hover {
+            background: rgba(167, 139, 250, 0.3);
+            border-color: rgba(167, 139, 250, 0.6);
+        }
+
+        .action-btn.danger {
+            background: rgba(239, 68, 68, 0.2);
+            border-color: rgba(239, 68, 68, 0.4);
+        }
+
+        .action-btn.danger:hover {
+            background: rgba(239, 68, 68, 0.3);
+            border-color: rgba(239, 68, 68, 0.6);
+        }
+    </style>
+</head>
+<body>
+    <div class="header">
+        <div class="logo">💎 Digital Carat</div>
+        <button class="wallet-btn" id="connectWallet">Connect Wallet</button>
+    </div>
+
+    <div class="nav">
+        <button class="nav-btn active" onclick="showPage('marketplace')">Marketplace</button>
+        <button class="nav-btn" onclick="showPage('myNFTs')">My NFTs</button>
+        <button class="nav-btn" onclick="showPage('dashboard')">Dashboard</button>
+        <button class="nav-btn" id="adminBtn" onclick="showAdminLogin()" style="margin-left: auto; background: rgba(239, 68, 68, 0.2);">🔐 Admin</button>
+    </div>
+
+    <div class="container">
+        <!-- Marketplace Page -->
+        <div id="marketplace" class="page active">
+            <div class="hero">
+                <h1 class="hero-title">Discover Precious Gemstones</h1>
+                <p class="hero-subtitle">Own authenticated gemstones backed by blockchain technology</p>
+            </div>
+
+            <div class="grid" id="nftGrid">
+                <!-- NFT cards will be inserted here -->
+            </div>
+        </div>
+
+        <!-- Admin Dashboard Page -->
+        <div id="admin" class="page">
+            <!-- Admin Login Section -->
+            <div id="adminLoginSection">
+                <div class="hero">
+                    <h1 class="hero-title">🔐 Admin Access</h1>
+                    <p class="hero-subtitle">Authorized personnel only</p>
+                </div>
+
+                <div class="create-form" style="max-width: 450px;">
+                    <h2 style="text-align: center; margin-bottom: 2rem;">Admin Login</h2>
+                    
+                    <div class="form-group">
+                        <label class="form-label">Admin Username</label>
+                        <input type="text" class="form-input" id="adminUsername" placeholder="Enter admin username">
+                    </div>
+
+                    <div class="form-group">
+                        <label class="form-label">Admin Password</label>
+                        <input type="password" class="form-input" id="adminPassword" placeholder="Enter admin password">
+                    </div>
+
+                    <button class="submit-btn" onclick="adminLogin()">Login as Admin</button>
+                    
+                    <div style="text-align: center; margin-top: 1rem; color: #a78bfa; font-size: 0.9rem;">
+                        For demo: username: <strong>admin</strong> / password: <strong>admin123</strong>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Admin Dashboard Content -->
+            <div id="adminDashboardContent" style="display: none;">
+                <div class="hero">
+                    <h1 class="hero-title">Admin Dashboard</h1>
+                    <p class="hero-subtitle">Manage NFTs and monitor marketplace</p>
+                </div>
+
+                <!-- Admin Stats -->
+                <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(250px, 1fr)); gap: 1.5rem; margin-bottom: 3rem;">
+                    <div class="stat-card">
+                        <div class="stat-label">Total Listed NFTs</div>
+                        <div class="stat-value">6</div>
+                        <div class="stat-change">3 pending mint</div>
+                    </div>
+                    <div class="stat-card">
+                        <div class="stat-label">Total Bids Placed</div>
+                        <div class="stat-value">47</div>
+                        <div class="stat-change positive">+12 today</div>
+                    </div>
+                    <div class="stat-card">
+                        <div class="stat-label">Minted NFTs</div>
+                        <div class="stat-value">3</div>
+                        <div class="stat-change">Cost saved: Ξ 0.45</div>
+                    </div>
+                    <div class="stat-card">
+                        <div class="stat-label">Total Revenue</div>
+                        <div class="stat-value"><span class="eth-symbol">Ξ</span> 18.7</div>
+                        <div class="stat-change positive">Platform fees</div>
+                    </div>
+                </div>
+
+                <!-- Create New NFT Listing -->
+                <div style="margin-bottom: 3rem;">
+                    <h2 style="font-size: 1.8rem; margin-bottom: 1.5rem; color: #a78bfa;">Create New NFT Listing</h2>
+                    
+                    <form class="create-form" id="adminCreateForm" style="max-width: 100%;">
+                        <div style="background: rgba(124, 58, 237, 0.2); padding: 1rem; border-radius: 8px; margin-bottom: 1.5rem; border-left: 3px solid #7c3aed;">
+                            <strong>💡 Smart Minting:</strong> NFT will only be minted on Ethereum when the first bid is placed. The minting gas fee will be automatically included in the bidder's transaction, so you incur zero costs!
+                        </div>
+
+                        <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 1.5rem;">
+                            <div class="form-group">
+                                <label class="form-label">Gemstone Name *</label>
+                                <input type="text" class="form-input" id="adminGemName" placeholder="e.g., Blue Sapphire" required>
+                            </div>
+
+                            <div class="form-group">
+                                <label class="form-label">Floor Price (ETH) *</label>
+                                <input type="number" class="form-input" id="adminFloorPrice" step="0.001" placeholder="0.5" required>
+                            </div>
+                        </div>
+
+                        <div class="form-group">
+                            <label class="form-label">Description *</label>
+                            <textarea class="form-textarea" id="adminDescription" placeholder="Describe the gemstone (origin, carat, cut, clarity, color grade, etc.)" required></textarea>
+                        </div>
+
+                        <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 1.5rem;">
+                            <div class="form-group">
+                                <label class="form-label">Gemstone Photo *</label>
+                                <div class="file-input-wrapper">
+                                    <label class="file-input-btn">
+                                        📸 Upload gemstone image
+                                        <input type="file" id="adminImage" accept="image/*" required>
+                                    </label>
+                                </div>
+                            </div>
+
+                            <div class="form-group">
+                                <label class="form-label">Certification Document (Optional)</label>
+                                <div class="file-input-wrapper">
+                                    <label class="file-input-btn">
+                                        📄 Upload certification
+                                        <input type="file" id="adminCert" accept=".pdf,image/*">
+                                    </label>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 1.5rem;">
+                            <div class="form-group">
+                                <label class="form-label">Carat Weight</label>
+                                <input type="number" class="form-input" id="adminCarat" step="0.01" placeholder="3.5">
+                            </div>
+
+                            <div class="form-group">
+                                <label class="form-label">Origin</label>
+                                <input type="text" class="form-input" id="adminOrigin" placeholder="e.g., Ceylon, Colombia">
+                            </div>
+                        </div>
+
+                        <div class="form-group">
+                            <label class="form-label">Certification Available for Purchase?</label>
+                            <select class="form-input" id="adminCertAvailable">
+                                <option value="yes">Yes - Additional Ξ 0.01</option>
+                                <option value="no">No - Already included</option>
+                            </select>
+                        </div>
+
+                        <button type="submit" class="submit-btn">Create NFT Listing</button>
+                    </form>
+                </div>
+
+                <!-- Manage Existing NFTs -->
+                <div style="margin-bottom: 3rem;">
+                    <h2 style="font-size: 1.8rem; margin-bottom: 1.5rem; color: #a78bfa;">Manage NFT Listings</h2>
+                    
+                    <div class="activity-container">
+                        <div class="activity-item">
+                            <div class="activity-icon">💎</div>
+                            <div class="activity-details">
+                                <div class="activity-title">Royal Blue Sapphire</div>
+                                <div class="activity-meta">Floor: Ξ 2.5 • Current Bid: Ξ 3.2 • 5 bids</div>
+                            </div>
+                            <div class="activity-status winning">Minted</div>
+                            <div style="display: flex; gap: 0.5rem;">
+                                <button class="action-btn" onclick="editNFT(1)">Edit</button>
+                                <button class="action-btn danger" onclick="deleteNFT(1)">Delete</button>
+                            </div>
+                        </div>
+
+                        <div class="activity-item">
+                            <div class="activity-icon">💎</div>
+                            <div class="activity-details">
+                                <div class="activity-title">Emerald Cut Diamond</div>
+                                <div class="activity-meta">Floor: Ξ 5.0 • Current Bid: Ξ 5.8 • 8 bids</div>
+                            </div>
+                            <div class="activity-status winning">Minted</div>
+                            <div style="display: flex; gap: 0.5rem;">
+                                <button class="action-btn" onclick="editNFT(2)">Edit</button>
+                                <button class="action-btn danger" onclick="deleteNFT(2)">Delete</button>
+                            </div>
+                        </div>
+
+                        <div class="activity-item">
+                            <div class="activity-icon">💎</div>
+                            <div class="activity-details">
+                                <div class="activity-title">Colombian Emerald</div>
+                                <div class="activity-meta">Floor: Ξ 3.0 • Current Bid: Ξ 3.5 • 3 bids</div>
+                            </div>
+                            <div class="activity-status winning">Minted</div>
+                            <div style="display: flex; gap: 0.5rem;">
+                                <button class="action-btn" onclick="editNFT(3)">Edit</button>
+                                <button class="action-btn danger" onclick="deleteNFT(3)">Delete</button>
+                            </div>
+                        </div>
+
+                        <div class="activity-item">
+                            <div class="activity-icon">⏳</div>
+                            <div class="activity-details">
+                                <div class="activity-title">Pink Tourmaline</div>
+                                <div class="activity-meta">Floor: Ξ 1.2 • No bids yet</div>
+                            </div>
+                            <div class="activity-status" style="background: rgba(251, 191, 36, 0.2); color: #fbbf24;">Pending Mint</div>
+                            <div style="display: flex; gap: 0.5rem;">
+                                <button class="action-btn" onclick="editNFT(4)">Edit</button>
+                                <button class="action-btn danger" onclick="deleteNFT(4)">Delete</button>
+                            </div>
+                        </div>
+
+                        <div class="activity-item">
+                            <div class="activity-icon">⏳</div>
+                            <div class="activity-details">
+                                <div class="activity-title">Ruby Heart</div>
+                                <div class="activity-meta">Floor: Ξ 4.5 • No bids yet</div>
+                            </div>
+                            <div class="activity-status" style="background: rgba(251, 191, 36, 0.2); color: #fbbf24;">Pending Mint</div>
+                            <div style="display: flex; gap: 0.5rem;">
+                                <button class="action-btn" onclick="editNFT(5)">Edit</button>
+                                <button class="action-btn danger" onclick="deleteNFT(5)">Delete</button>
+                            </div>
+                        </div>
+
+                        <div class="activity-item">
+                            <div class="activity-icon">⏳</div>
+                            <div class="activity-details">
+                                <div class="activity-title">Tanzanite Gem</div>
+                                <div class="activity-meta">Floor: Ξ 1.8 • No bids yet</div>
+                            </div>
+                            <div class="activity-status" style="background: rgba(251, 191, 36, 0.2); color: #fbbf24;">Pending Mint</div>
+                            <div style="display: flex; gap: 0.5rem;">
+                                <button class="action-btn" onclick="editNFT(6)">Edit</button>
+                                <button class="action-btn danger" onclick="deleteNFT(6)">Delete</button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Recent Admin Activity -->
+                <div>
+                    <h2 style="font-size: 1.8rem; margin-bottom: 1.5rem; color: #a78bfa;">Recent Activity</h2>
+                    <div class="activity-container">
+                        <div class="activity-item">
+                            <div class="activity-icon">⚡</div>
+                            <div class="activity-details">
+                                <div class="activity-title">NFT Minted: Colombian Emerald</div>
+                                <div class="activity-meta">Triggered by first bid from 0x742d...5a3c</div>
+                            </div>
+                            <div class="activity-time">1 hour ago</div>
+                        </div>
+
+                        <div class="activity-item">
+                            <div class="activity-icon">📤</div>
+                            <div class="activity-details">
+                                <div class="activity-title">New NFT Listed: Tanzanite Gem</div>
+                                <div class="activity-meta">Status: Pending first bid to mint</div>
+                            </div>
+                            <div class="activity-time">3 hours ago</div>
+                        </div>
+
+                        <div class="activity-item">
+                            <div class="activity-icon">⚡</div>
+                            <div class="activity-details">
+                                <div class="activity-title">NFT Minted: Royal Blue Sapphire</div>
+                                <div class="activity-meta">Triggered by first bid from 0x89ab...cd12</div>
+                            </div>
+                            <div class="activity-time">5 hours ago</div>
+                        </div>
+
+                        <div class="activity-item">
+                            <div class="activity-icon">✏️</div>
+                            <div class="activity-details">
+                                <div class="activity-title">Updated: Emerald Cut Diamond</div>
+                                <div class="activity-meta">Changed description and floor price</div>
+                            </div>
+                            <div class="activity-time">1 day ago</div>
+                        </div>
+                    </div>
+                </div>
+
+                <div style="margin-top: 2rem; text-align: center;">
+                    <button class="action-btn danger" onclick="adminLogout()" style="padding: 0.75rem 2rem;">Logout</button>
+                </div>
+            </div>
+        </div>
+
+        <!-- My NFTs Page -->
+        <div id="myNFTs" class="page">
+            <div class="hero">
+                <h1 class="hero-title">My Collection</h1>
+                <p class="hero-subtitle">Manage your gemstone NFTs</p>
+            </div>
+
+            <div class="grid" id="myNFTGrid">
+                <p style="text-align: center; color: #a78bfa; padding: 2rem;">Connect your wallet to view your NFTs</p>
+            </div>
+        </div>
+
+        <!-- Dashboard Page -->
+        <div id="dashboard" class="page">
+            <div class="hero">
+                <h1 class="hero-title">My Dashboard</h1>
+                <p class="hero-subtitle">Track your portfolio and manage your account</p>
+            </div>
+
+            <!-- Login Section (shown when not logged in) -->
+            <div id="loginSection" class="create-form" style="max-width: 450px;">
+                <h2 style="text-align: center; margin-bottom: 2rem;">Login to Your Account</h2>
+                
+                <div class="form-group">
+                    <label class="form-label">Email or Wallet Address</label>
+                    <input type="text" class="form-input" id="loginEmail" placeholder="your@email.com or 0x...">
+                </div>
+
+                <div class="form-group">
+                    <label class="form-label">Password</label>
+                    <input type="password" class="form-input" id="loginPassword" placeholder="Enter your password">
+                </div>
+
+                <button class="submit-btn" onclick="login()">Login</button>
+                
+                <div style="text-align: center; margin-top: 1.5rem;">
+                    <p style="color: #a78bfa;">Or connect with your wallet</p>
+                    <button class="wallet-btn" style="margin-top: 1rem;" onclick="login()">Connect MetaMask</button>
+                </div>
+            </div>
+
+            <!-- Dashboard Content (shown when logged in) -->
+            <div id="dashboardContent" style="display: none;">
+                <!-- Stats Overview -->
+                <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(250px, 1fr)); gap: 1.5rem; margin-bottom: 3rem;">
+                    <div class="stat-card">
+                        <div class="stat-label">Total NFTs Owned</div>
+                        <div class="stat-value">12</div>
+                        <div class="stat-change positive">+2 this month</div>
+                    </div>
+                    <div class="stat-card">
+                        <div class="stat-label">Portfolio Value</div>
+                        <div class="stat-value"><span class="eth-symbol">Ξ</span> 45.8</div>
+                        <div class="stat-change positive">+12.5% ($89,420)</div>
+                    </div>
+                    <div class="stat-card">
+                        <div class="stat-label">Active Bids</div>
+                        <div class="stat-value">5</div>
+                        <div class="stat-change">3 winning</div>
+                    </div>
+                    <div class="stat-card">
+                        <div class="stat-label">Total Spent</div>
+                        <div class="stat-value"><span class="eth-symbol">Ξ</span> 38.2</div>
+                        <div class="stat-change positive">+19.9% gain</div>
+                    </div>
+                </div>
+
+                <!-- My Active Bids -->
+                <div style="margin-bottom: 3rem;">
+                    <h2 style="font-size: 1.8rem; margin-bottom: 1.5rem; color: #a78bfa;">Active Bids</h2>
+                    <div class="activity-container">
+                        <div class="activity-item">
+                            <div class="activity-icon">🔨</div>
+                            <div class="activity-details">
+                                <div class="activity-title">Royal Blue Sapphire</div>
+                                <div class="activity-meta">Your bid: <span class="eth-symbol">Ξ</span> 3.2 • Current highest bid</div>
+                            </div>
+                            <div class="activity-status winning">Winning</div>
+                            <div class="activity-time">Ends in 18h 45m</div>
+                        </div>
+
+                        <div class="activity-item">
+                            <div class="activity-icon">🔨</div>
+                            <div class="activity-details">
+                                <div class="activity-title">Emerald Cut Diamond</div>
+                                <div class="activity-meta">Your bid: <span class="eth-symbol">Ξ</span> 5.5 • Outbid by <span class="eth-symbol">Ξ</span> 0.3</div>
+                            </div>
+                            <div class="activity-status outbid">Outbid</div>
+                            <div class="activity-time">Ends in 6h 23m</div>
+                        </div>
+
+                        <div class="activity-item">
+                            <div class="activity-icon">🔨</div>
+                            <div class="activity-details">
+                                <div class="activity-title">Pink Tourmaline</div>
+                                <div class="activity-meta">Your bid: <span class="eth-symbol">Ξ</span> 1.2 • Current highest bid</div>
+                            </div>
+                            <div class="activity-status winning">Winning</div>
+                            <div class="activity-time">Ends in 14h 55m</div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- My NFTs Performance -->
+                <div style="margin-bottom: 3rem;">
+                    <h2 style="font-size: 1.8rem; margin-bottom: 1.5rem; color: #a78bfa;">My NFT Performance</h2>
+                    <div class="performance-grid">
+                        <div class="performance-card">
+                            <img src="https://images.unsplash.com/photo-1611955167811-4711904bb9f8?w=400" class="performance-image">
+                            <div class="performance-content">
+                                <div class="performance-title">Colombian Emerald #7834</div>
+                                <div class="performance-details">
+                                    <div>
+                                        <div class="detail-label">Purchase Price</div>
+                                        <div class="detail-value"><span class="eth-symbol">Ξ</span> 2.8</div>
+                                    </div>
+                                    <div>
+                                        <div class="detail-label">Current Value</div>
+                                        <div class="detail-value"><span class="eth-symbol">Ξ</span> 3.9</div>
+                                    </div>
+                                    <div>
+                                        <div class="detail-label">Gain/Loss</div>
+                                        <div class="detail-value" style="color: #10b981;">+39.3%</div>
+                                    </div>
+                                </div>
+                                <div class="performance-views">👁️ 1,234 views • 💬 23 inquiries</div>
+                            </div>
+                        </div>
+
+                        <div class="performance-card">
+                            <img src="https://images.unsplash.com/photo-1617038260897-41a1f14a8ca0?w=400" class="performance-image">
+                            <div class="performance-content">
+                                <div class="performance-title">Ruby Heart #2156</div>
+                                <div class="performance-details">
+                                    <div>
+                                        <div class="detail-label">Purchase Price</div>
+                                        <div class="detail-value"><span class="eth-symbol">Ξ</span> 4.2</div>
+                                    </div>
+                                    <div>
+                                        <div class="detail-label">Current Value</div>
+                                        <div class="detail-value"><span class="eth-symbol">Ξ</span> 5.5</div>
+                                    </div>
+                                    <div>
+                                        <div class="detail-label">Gain/Loss</div>
+                                        <div class="detail-value" style="color: #10b981;">+31.0%</div>
+                                    </div>
+                                </div>
+                                <div class="performance-views">👁️ 892 views • 💬 15 inquiries</div>
+                            </div>
+                        </div>
+
+                        <div class="performance-card">
+                            <img src="https://images.unsplash.com/photo-1515562141207-7a88fb7ce338?w=400" class="performance-image">
+                            <div class="performance-content">
+                                <div class="performance-title">Tanzanite Gem #9423</div>
+                                <div class="performance-details">
+                                    <div>
+                                        <div class="detail-label">Purchase Price</div>
+                                        <div class="detail-value"><span class="eth-symbol">Ξ</span> 1.9</div>
+                                    </div>
+                                    <div>
+                                        <div class="detail-label">Current Value</div>
+                                        <div class="detail-value"><span class="eth-symbol">Ξ</span> 1.7</div>
+                                    </div>
+                                    <div>
+                                        <div class="detail-label">Gain/Loss</div>
+                                        <div class="detail-value" style="color: #ef4444;">-10.5%</div>
+                                    </div>
+                                </div>
+                                <div class="performance-views">👁️ 456 views • 💬 8 inquiries</div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Recent Activity -->
+                <div>
+                    <h2 style="font-size: 1.8rem; margin-bottom: 1.5rem; color: #a78bfa;">Recent Activity</h2>
+                    <div class="activity-container">
+                        <div class="activity-item">
+                            <div class="activity-icon">✅</div>
+                            <div class="activity-details">
+                                <div class="activity-title">Won auction: Pink Tourmaline</div>
+                                <div class="activity-meta">Winning bid: <span class="eth-symbol">Ξ</span> 1.2</div>
+                            </div>
+                            <div class="activity-time">2 hours ago</div>
+                        </div>
+
+                        <div class="activity-item">
+                            <div class="activity-icon">📤</div>
+                            <div class="activity-details">
+                                <div class="activity-title">Listed NFT: Emerald Cut Diamond</div>
+                                <div class="activity-meta">Floor price: <span class="eth-symbol">Ξ</span> 5.0</div>
+                            </div>
+                            <div class="activity-time">1 day ago</div>
+                        </div>
+
+                        <div class="activity-item">
+                            <div class="activity-icon">🔨</div>
+                            <div class="activity-details">
+                                <div class="activity-title">Placed bid: Royal Blue Sapphire</div>
+                                <div class="activity-meta">Bid amount: <span class="eth-symbol">Ξ</span> 3.2</div>
+                            </div>
+                            <div class="activity-time">2 days ago</div>
+                        </div>
+
+                        <div class="activity-item">
+                            <div class="activity-icon">⚡</div>
+                            <div class="activity-details">
+                                <div class="activity-title">Minted new NFT: Colombian Emerald</div>
+                                <div class="activity-meta">Token ID: #7834</div>
+                            </div>
+                            <div class="activity-time">5 days ago</div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Bidding Modal -->
+    <div id="bidModal" class="modal">
+        <div class="modal-content">
+            <button class="close-btn" onclick="closeModal()">&times;</button>
+            <div class="modal-header" id="modalTitle">Place Your Bid</div>
+            
+            <div id="modalDetails"></div>
+
+            <div class="form-group" style="margin-top: 1.5rem;">
+                <label class="form-label">Your Bid Amount (ETH)</label>
+                <input type="number" class="form-input" id="bidAmount" step="0.001" placeholder="0.0">
+            </div>
+
+            <div style="background: rgba(124, 58, 237, 0.15); padding: 1rem; border-radius: 8px; margin: 1rem 0; font-size: 0.9rem;">
+                <strong>⚠️ Gas Fee Notice:</strong> If this is the first bid on this NFT, the minting gas fee (~0.01-0.03 ETH) will be added to your transaction cost. Subsequent bids only pay standard gas fees.
+            </div>
+
+            <button class="submit-btn" onclick="placeBid()">Place Bid</button>
+        </div>
+    </div>
+
+    <script>
+        // Sample NFT data
+        const sampleNFTs = [
+            {
+                id: 1,
+                name: "Royal Blue Sapphire",
+                description: "3.5 carat Ceylon sapphire with exceptional clarity",
+                image: "https://images.unsplash.com/photo-1611955167811-4711904bb9f8?w=400",
+                floorPrice: 2.5,
+                currentBid: 3.2,
+                timeLeft: "18h 45m",
+                certified: true
+            },
+            {
+                id: 2,
+                name: "Emerald Cut Diamond",
+                description: "2.1 carat VS1 clarity, D color grade diamond",
+                image: "https://images.unsplash.com/photo-1605100804763-247f67b3557e?w=400",
+                floorPrice: 5.0,
+                currentBid: 5.8,
+                timeLeft: "6h 23m",
+                certified: true
+            },
+            {
+                id: 3,
+                name: "Colombian Emerald",
+                description: "4.2 carat vivid green emerald from Muzo mines",
+                image: "https://images.unsplash.com/photo-1583937443566-6a2c2c2e9e66?w=400",
+                floorPrice: 3.0,
+                currentBid: 3.5,
+                timeLeft: "22h 10m",
+                certified: false
+            },
+            {
+                id: 4,
+                name: "Pink Tourmaline",
+                description: "6.8 carat Brazilian pink tourmaline",
+                image: "https://images.unsplash.com/photo-1611591437281-460bfbe1220a?w=400",
+                floorPrice: 1.2,
+                currentBid: 1.2,
+                timeLeft: "14h 55m",
+                certified: true
+            },
+            {
+                id: 5,
+                name: "Ruby Heart",
+                description: "2.9 carat Burmese ruby, pigeon blood red",
+                image: "https://images.unsplash.com/photo-1617038260897-41a1f14a8ca0?w=400",
+                floorPrice: 4.5,
+                currentBid: 5.1,
+                timeLeft: "3h 30m",
+                certified: true
+            },
+            {
+                id: 6,
+                name: "Tanzanite Gem",
+                description: "5.3 carat violet-blue tanzanite",
+                image: "https://images.unsplash.com/photo-1515562141207-7a88fb7ce338?w=400",
+                floorPrice: 1.8,
+                currentBid: 2.1,
+                timeLeft: "20h 15m",
+                certified: false
+            }
+        ];
+
+        let currentNFT = null;
+
+        // Initialize the marketplace
+        function initMarketplace() {
+            const grid = document.getElementById('nftGrid');
+            grid.innerHTML = '';
+
+            sampleNFTs.forEach(nft => {
+                const card = createNFTCard(nft);
+                grid.appendChild(card);
+            });
+        }
+
+        // Create NFT card element
+        function createNFTCard(nft) {
+            const card = document.createElement('div');
+            card.className = 'nft-card';
+            card.innerHTML = `
+                <img src="${nft.image}" alt="${nft.name}" class="nft-image">
+                <div class="nft-content">
+                    <div class="nft-title">${nft.name} ${nft.certified ? '✓' : ''}</div>
+                    <div class="nft-description">${nft.description}</div>
+                    <div class="nft-details">
+                        <div class="detail-item">
+                            <div class="detail-label">Floor Price</div>
+                            <div class="detail-value"><span class="eth-symbol">Ξ</span> ${nft.floorPrice}</div>
+                        </div>
+                        <div class="detail-item">
+                            <div class="detail-label">Current Bid</div>
+                            <div class="detail-value"><span class="eth-symbol">Ξ</span> ${nft.currentBid}</div>
+                        </div>
+                        <div class="detail-item">
+                            <div class="detail-label">Ends In</div>
+                            <div class="detail-value">${nft.timeLeft}</div>
+                        </div>
+                    </div>
+                    <button class="bid-btn" onclick="openBidModal(${nft.id})">Place Bid</button>
+                </div>
+            `;
+            return card;
+        }
+
+        // Open bidding modal
+        function openBidModal(nftId) {
+            currentNFT = sampleNFTs.find(nft => nft.id === nftId);
+            const modal = document.getElementById('bidModal');
+            const modalDetails = document.getElementById('modalDetails');
+            
+            modalDetails.innerHTML = `
+                <div class="timer">⏰ Auction ends in ${currentNFT.timeLeft}</div>
+                <h3 style="margin: 1rem 0;">${currentNFT.name}</h3>
+                <p style="color: #a78bfa; margin-bottom: 1rem;">${currentNFT.description}</p>
+                <div style="display: flex; justify-content: space-between; padding: 1rem; background: rgba(0,0,0,0.3); border-radius: 8px;">
+                    <div>
+                        <div style="color: #a78bfa; font-size: 0.9rem;">Floor Price</div>
+                        <div style="font-size: 1.2rem; font-weight: 600;"><span class="eth-symbol">Ξ</span> ${currentNFT.floorPrice}</div>
+                    </div>
+                    <div>
+                        <div style="color: #a78bfa; font-size: 0.9rem;">Current Bid</div>
+                        <div style="font-size: 1.2rem; font-weight: 600;"><span class="eth-symbol">Ξ</span> ${currentNFT.currentBid}</div>
+                    </div>
+                </div>
+            `;
+            
+            document.getElementById('bidAmount').value = '';
+            document.getElementById('bidAmount').min = currentNFT.currentBid + 0.1;
+            modal.classList.add('active');
+        }
+
+        // Close modal
+        function closeModal() {
+            document.getElementById('bidModal').classList.remove('active');
+        }
+
+        // Place bid
+        function placeBid() {
+            const bidAmount = parseFloat(document.getElementById('bidAmount').value);
+            
+            if (!bidAmount || bidAmount <= currentNFT.currentBid) {
+                alert(`Bid must be higher than current bid of ${currentNFT.currentBid} ETH`);
+                return;
+            }
+
+            if (bidAmount < currentNFT.floorPrice) {
+                alert(`Bid must be at least the floor price of ${currentNFT.floorPrice} ETH`);
+                return;
+            }
+
+            // Determine if this is first bid (NFT not minted yet)
+            const isFirstBid = currentNFT.currentBid === currentNFT.floorPrice;
+            const estimatedGasFee = isFirstBid ? 0.025 : 0.003;
+            const totalCost = bidAmount + estimatedGasFee;
+
+            let message = `Bid Confirmation\n\n`;
+            message += `Your Bid: ${bidAmount} ETH\n`;
+            message += `Estimated Gas Fee: ${estimatedGasFee} ETH\n`;
+            if (isFirstBid) {
+                message += `(Includes NFT minting cost)\n`;
+            }
+            message += `\nTotal Transaction Cost: ~${totalCost.toFixed(3)} ETH\n\n`;
+            
+            if (isFirstBid) {
+                message += `⚡ You're the first bidder!\n`;
+                message += `Your transaction will mint this NFT on the Ethereum blockchain and start the 24-hour auction.\n\n`;
+            }
+            
+            message += `Note: In the full version, this will connect to your Ethereum wallet to process the transaction.`;
+
+            alert(message);
+            closeModal();
+        }
+
+        // Show different pages
+        function showPage(pageName) {
+            document.querySelectorAll('.page').forEach(page => page.classList.remove('active'));
+            document.querySelectorAll('.nav-btn').forEach(btn => btn.classList.remove('active'));
+            
+            document.getElementById(pageName).classList.add('active');
+            event.target.classList.add('active');
+        }
+
+        // Handle form submission
+        document.getElementById('createForm')?.addEventListener('submit', function(e) {
+            e.preventDefault();
+            alert('This feature is now admin-only. Please contact an administrator to list NFTs.');
+            this.reset();
+        });
+
+        // Admin login function
+        function showAdminLogin() {
+            showPage('admin');
+            document.querySelector('#adminBtn').classList.add('active');
+        }
+
+        function adminLogin() {
+            const username = document.getElementById('adminUsername').value;
+            const password = document.getElementById('adminPassword').value;
+
+            // Simple authentication (in production, this would be server-side)
+            if (username === 'admin' && password === 'admin123') {
+                document.getElementById('adminLoginSection').style.display = 'none';
+                document.getElementById('adminDashboardContent').style.display = 'block';
+                alert('✅ Admin login successful!\n\nYou can now:\n• Create NFT listings\n• Manage existing NFTs\n• Monitor marketplace activity\n• View analytics');
+            } else {
+                alert('❌ Invalid credentials. Please try again.');
+            }
+        }
+
+        function adminLogout() {
+            document.getElementById('adminLoginSection').style.display = 'block';
+            document.getElementById('adminDashboardContent').style.display = 'none';
+            document.getElementById('adminUsername').value = '';
+            document.getElementById('adminPassword').value = '';
+            showPage('marketplace');
+        }
+
+        // Admin create NFT form
+        document.getElementById('adminCreateForm')?.addEventListener('submit', function(e) {
+            e.preventDefault();
+            
+            const gemName = document.getElementById('adminGemName').value;
+            const floorPrice = document.getElementById('adminFloorPrice').value;
+            const description = document.getElementById('adminDescription').value;
+            
+            alert(`✅ NFT Listing Created Successfully!\n\nGemstone: ${gemName}\nFloor Price: Ξ ${floorPrice}\n\n💡 Smart Minting Status: PENDING\nThe NFT will be automatically minted on Ethereum when the first bid is placed, saving you gas fees!\n\nThe listing is now live on the marketplace.`);
+            
+            this.reset();
+        });
+
+        // Edit NFT function
+        function editNFT(nftId) {
+            const nft = sampleNFTs.find(n => n.id === nftId);
+            if (nft) {
+                alert(`Edit NFT: ${nft.name}\n\nThis would open an edit form with current values:\n• Name: ${nft.name}\n• Floor Price: Ξ ${nft.floorPrice}\n• Description: ${nft.description}\n\nIn production, this would allow you to modify NFT details.`);
+            }
+        }
+
+        // Delete NFT function
+        function deleteNFT(nftId) {
+            const nft = sampleNFTs.find(n => n.id === nftId);
+            if (nft) {
+                if (confirm(`Are you sure you want to delete "${nft.name}"?\n\nThis action cannot be undone.`)) {
+                    alert(`NFT "${nft.name}" has been deleted from the marketplace.`);
+                }
+            }
+        }
+
+        // Connect wallet button
+        document.getElementById('connectWallet').addEventListener('click', function() {
+            alert('Wallet connection will be implemented with MetaMask integration.\n\nThis will allow you to:\n- Connect your Ethereum wallet\n- View your balance\n- Place bids and mint NFTs\n- Manage your collection');
+            this.textContent = '0x742d...5a3c';
+        });
+
+        // Login function
+        function login() {
+            const email = document.getElementById('loginEmail')?.value;
+            const password = document.getElementById('loginPassword')?.value;
+
+            // Simple validation
+            if (email || true) { // Allow login with just wallet connection
+                document.getElementById('loginSection').style.display = 'none';
+                document.getElementById('dashboardContent').style.display = 'block';
+                
+                // Update wallet button
+                document.getElementById('connectWallet').textContent = '0x742d...5a3c';
+                
+                alert('Successfully logged in!\n\nYou can now:\n✓ View your portfolio stats\n✓ Track active bids\n✓ Monitor NFT performance\n✓ See activity history');
+            } else {
+                alert('Please enter your credentials or connect your wallet');
+            }
+        }
+
+        // Initialize on load
+        initMarketplace();
+    </script>
+</body>
+</html>
