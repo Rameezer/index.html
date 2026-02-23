@@ -1176,8 +1176,8 @@
             document.getElementById('bidModal').classList.remove('active');
         }
 
-        // Place bid
-        function placeBid() {
+        // Place bid - REAL BLOCKCHAIN TRANSACTION
+        async function placeBid() {
             const bidAmount = parseFloat(document.getElementById('bidAmount').value);
             
             if (!bidAmount || bidAmount <= currentNFT.currentBid) {
@@ -1190,28 +1190,11 @@
                 return;
             }
 
-            // Determine if this is first bid (NFT not minted yet)
-            const isFirstBid = currentNFT.currentBid === currentNFT.floorPrice;
-            const estimatedGasFee = isFirstBid ? 0.025 : 0.003;
-            const totalCost = bidAmount + estimatedGasFee;
-
-            let message = `Bid Confirmation\n\n`;
-            message += `Your Bid: ${bidAmount} ETH\n`;
-            message += `Estimated Gas Fee: ${estimatedGasFee} ETH\n`;
-            if (isFirstBid) {
-                message += `(Includes NFT minting cost)\n`;
+            const receipt = await placeBidReal(currentNFT.id, bidAmount);
+            if (receipt) {
+                closeModal();
+                setTimeout(() => window.location.reload(), 2000);
             }
-            message += `\nTotal Transaction Cost: ~${totalCost.toFixed(3)} ETH\n\n`;
-            
-            if (isFirstBid) {
-                message += `⚡ You're the first bidder!\n`;
-                message += `Your transaction will mint this NFT on the Ethereum blockchain and start the 24-hour auction.\n\n`;
-            }
-            
-            message += `Note: In the full version, this will connect to your Ethereum wallet to process the transaction.`;
-
-            alert(message);
-            closeModal();
         }
 
         // Show different pages
@@ -1258,17 +1241,25 @@
             showPage('marketplace');
         }
 
-        // Admin create NFT form
-        document.getElementById('adminCreateForm')?.addEventListener('submit', function(e) {
+        // Admin create NFT form - REAL BLOCKCHAIN CREATION
+        document.getElementById('adminCreateForm')?.addEventListener('submit', async function(e) {
             e.preventDefault();
             
-            const gemName = document.getElementById('adminGemName').value;
-            const floorPrice = document.getElementById('adminFloorPrice').value;
-            const description = document.getElementById('adminDescription').value;
-            
-            alert(`✅ NFT Listing Created Successfully!\n\nGemstone: ${gemName}\nFloor Price: Ξ ${floorPrice}\n\n💡 Smart Minting Status: PENDING\nThe NFT will be automatically minted on Ethereum when the first bid is placed, saving you gas fees!\n\nThe listing is now live on the marketplace.`);
-            
-            this.reset();
+            const gemData = {
+                name: document.getElementById('adminGemName').value,
+                description: document.getElementById('adminDescription').value,
+                imageURI: 'ipfs://QmTemp123',
+                certificationURI: '',
+                caratWeight: parseFloat(document.getElementById('adminCarat')?.value) || 0,
+                origin: document.getElementById('adminOrigin').value,
+                hasCertification: document.getElementById('adminCertAvailable').value === 'yes',
+                floorPrice: parseFloat(document.getElementById('adminFloorPrice').value)
+            };
+
+            const receipt = await createNFTReal(gemData);
+            if (receipt) {
+                this.reset();
+            }
         });
 
         // Edit NFT function
@@ -1289,10 +1280,9 @@
             }
         }
 
-        // Connect wallet button
-        document.getElementById('connectWallet').addEventListener('click', function() {
-            alert('Wallet connection will be implemented with MetaMask integration.\n\nThis will allow you to:\n- Connect your Ethereum wallet\n- View your balance\n- Place bids and mint NFTs\n- Manage your collection');
-            this.textContent = '0x742d...5a3c';
+        // Connect wallet button - REAL BLOCKCHAIN CONNECTION
+        document.getElementById('connectWallet').addEventListener('click', async function() {
+            await connectWalletReal();
         });
 
         // Login function
@@ -1316,6 +1306,142 @@
 
         // Initialize on load
         initMarketplace();
+    </script>
+
+    <!-- Ethers.js Library for Web3 Integration -->
+    <script src="https://cdn.ethers.io/lib/ethers-5.7.umd.min.js"></script>
+
+    <!-- Blockchain Integration Scripts -->
+    <script>
+        // WALLET CONNECTION MODULE
+        let provider = null;
+        let signer = null;
+        let userAddress = null;
+        let contract = null;
+        let isConnected = false;
+
+        const CONTRACT_ADDRESS = "0x385A96a935EeE32ea0D41f3492Af83BD59D9EA98";
+        const CONTRACT_ABI = [
+            "function createGemstoneListing(string memory name, string memory description, string memory imageURI, string memory certificationURI, uint256 caratWeight, string memory origin, bool hasCertification, uint256 floorPrice) external returns (uint256)",
+            "function placeBid(uint256 tokenId) external payable",
+            "function getAuction(uint256 tokenId) external view returns (tuple(uint256 tokenId, uint256 floorPrice, uint256 currentBid, address currentBidder, address seller, uint256 startTime, uint256 endTime, bool active, bool isFirstBid))",
+            "function getGemstone(uint256 tokenId) external view returns (tuple(string name, string description, string imageURI, string certificationURI, uint256 caratWeight, string origin, bool hasCertification, bool isMinted))",
+            "function isGemstoneUnminted(uint256 tokenId) external view returns (bool)",
+            "function owner() external view returns (address)"
+        ];
+
+        async function connectWalletReal() {
+            console.log("🔌 Connecting wallet...");
+            
+            if (typeof window.ethereum === 'undefined') {
+                alert('MetaMask not installed!\n\nPlease install MetaMask to use this marketplace.');
+                window.open('https://metamask.io/download/', '_blank');
+                return false;
+            }
+
+            try {
+                await window.ethereum.request({ method: 'eth_requestAccounts' });
+                provider = new ethers.providers.Web3Provider(window.ethereum);
+                signer = provider.getSigner();
+                userAddress = await signer.getAddress();
+                contract = new ethers.Contract(CONTRACT_ADDRESS, CONTRACT_ABI, signer);
+
+                const network = await provider.getNetwork();
+                if (network.chainId !== 11155111) {
+                    const switchNetwork = confirm('Wrong Network!\n\nPlease switch to Sepolia Testnet.\n\nClick OK to switch automatically.');
+                    if (switchNetwork) {
+                        await window.ethereum.request({
+                            method: 'wallet_switchEthereumChain',
+                            params: [{ chainId: '0xaa36a7' }],
+                        });
+                        return await connectWalletReal();
+                    }
+                    return false;
+                }
+
+                isConnected = true;
+                const shortAddress = userAddress.substring(0, 6) + '...' + userAddress.substring(38);
+                document.getElementById('connectWallet').textContent = shortAddress;
+                document.getElementById('connectWallet').style.background = 'linear-gradient(135deg, #10b981, #059669)';
+                
+                console.log('✅ Wallet connected:', userAddress);
+                return true;
+            } catch (error) {
+                console.error('Error:', error);
+                alert('Failed to connect: ' + error.message);
+                return false;
+            }
+        }
+
+        async function placeBidReal(tokenId, bidAmountETH) {
+            if (!isConnected) {
+                alert('Please connect your wallet first!');
+                return null;
+            }
+
+            try {
+                const isUnminted = await contract.isGemstoneUnminted(tokenId);
+                const bidInWei = ethers.utils.parseEther(bidAmountETH.toString());
+
+                let confirmMsg = `Place Bid: ${bidAmountETH} ETH\n\n`;
+                if (isUnminted) {
+                    confirmMsg += '⚡ FIRST BID - Will mint NFT!\n';
+                    confirmMsg += '24-hour auction starts now.\n\n';
+                }
+                confirmMsg += 'Proceed?';
+
+                if (!confirm(confirmMsg)) return null;
+
+                const tx = await contract.placeBid(tokenId, { value: bidInWei });
+                alert(`Transaction submitted!\n\nHash: ${tx.hash.substring(0, 10)}...\n\nWaiting for confirmation...`);
+                
+                const receipt = await tx.wait();
+                alert('✅ Bid placed successfully!');
+                return receipt;
+            } catch (error) {
+                console.error('Error:', error);
+                alert('Transaction failed: ' + (error.reason || error.message));
+                return null;
+            }
+        }
+
+        async function createNFTReal(gemData) {
+            if (!isConnected) {
+                alert('Please connect wallet!');
+                return null;
+            }
+
+            try {
+                const owner = await contract.owner();
+                if (owner.toLowerCase() !== userAddress.toLowerCase()) {
+                    alert('Only contract owner can create listings!');
+                    return null;
+                }
+
+                const floorPriceWei = ethers.utils.parseEther(gemData.floorPrice.toString());
+                const caratStored = Math.round(gemData.caratWeight * 10);
+
+                const tx = await contract.createGemstoneListing(
+                    gemData.name,
+                    gemData.description,
+                    gemData.imageURI || 'ipfs://QmTemp',
+                    gemData.certificationURI || '',
+                    caratStored,
+                    gemData.origin,
+                    gemData.hasCertification,
+                    floorPriceWei
+                );
+
+                alert(`Creating listing...\n\n${tx.hash.substring(0, 10)}...`);
+                const receipt = await tx.wait();
+                alert('✅ NFT listing created on blockchain!');
+                return receipt;
+            } catch (error) {
+                console.error('Error:', error);
+                alert('Failed: ' + (error.reason || error.message));
+                return null;
+            }
+        }
     </script>
 </body>
 </html>
