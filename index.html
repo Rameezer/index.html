@@ -1308,8 +1308,8 @@
         initMarketplace();
     </script>
 
-    <!-- Ethers.js Library for Web3 Integration -->
-    <script src="https://cdn.ethers.io/lib/ethers-5.7.umd.min.js"></script>
+    <!-- Ethers.js v6 Library for Web3 Integration -->
+    <script src="https://cdn.jsdelivr.net/npm/ethers@6.9.0/dist/ethers.umd.min.js"></script>
 
     <!-- Blockchain Integration Scripts -->
     <script>
@@ -1341,13 +1341,15 @@
 
             try {
                 await window.ethereum.request({ method: 'eth_requestAccounts' });
-                provider = new ethers.providers.Web3Provider(window.ethereum);
-                signer = provider.getSigner();
+                provider = new ethers.BrowserProvider(window.ethereum);
+                signer = await provider.getSigner();
                 userAddress = await signer.getAddress();
                 contract = new ethers.Contract(CONTRACT_ADDRESS, CONTRACT_ABI, signer);
 
                 const network = await provider.getNetwork();
-                if (network.chainId !== 11155111) {
+                const chainId = Number(network.chainId);
+                
+                if (chainId !== 11155111) {
                     const switchNetwork = confirm('Wrong Network!\n\nPlease switch to Sepolia Testnet.\n\nClick OK to switch automatically.');
                     if (switchNetwork) {
                         await window.ethereum.request({
@@ -1365,6 +1367,7 @@
                 document.getElementById('connectWallet').style.background = 'linear-gradient(135deg, #10b981, #059669)';
                 
                 console.log('✅ Wallet connected:', userAddress);
+                alert('✅ Wallet Connected!\n\nAddress: ' + shortAddress + '\n\nYou can now create NFTs and place bids!');
                 return true;
             } catch (error) {
                 console.error('Error:', error);
@@ -1381,7 +1384,7 @@
 
             try {
                 const isUnminted = await contract.isGemstoneUnminted(tokenId);
-                const bidInWei = ethers.utils.parseEther(bidAmountETH.toString());
+                const bidInWei = ethers.parseEther(bidAmountETH.toString());
 
                 let confirmMsg = `Place Bid: ${bidAmountETH} ETH\n\n`;
                 if (isUnminted) {
@@ -1392,35 +1395,47 @@
 
                 if (!confirm(confirmMsg)) return null;
 
+                console.log('Sending bid transaction...');
                 const tx = await contract.placeBid(tokenId, { value: bidInWei });
                 alert(`Transaction submitted!\n\nHash: ${tx.hash.substring(0, 10)}...\n\nWaiting for confirmation...`);
                 
                 const receipt = await tx.wait();
+                console.log('✅ Transaction confirmed:', receipt);
                 alert('✅ Bid placed successfully!');
                 return receipt;
             } catch (error) {
                 console.error('Error:', error);
-                alert('Transaction failed: ' + (error.reason || error.message));
+                let errorMsg = 'Transaction failed: ';
+                if (error.message.includes('user rejected')) {
+                    errorMsg = 'Transaction cancelled by user';
+                } else if (error.reason) {
+                    errorMsg += error.reason;
+                } else {
+                    errorMsg += error.message;
+                }
+                alert(errorMsg);
                 return null;
             }
         }
 
         async function createNFTReal(gemData) {
             if (!isConnected) {
-                alert('Please connect wallet!');
+                alert('Please connect wallet first!');
                 return null;
             }
 
             try {
+                console.log('Checking if user is owner...');
                 const owner = await contract.owner();
                 if (owner.toLowerCase() !== userAddress.toLowerCase()) {
-                    alert('Only contract owner can create listings!');
+                    alert('Only contract owner can create listings!\n\nOwner: ' + owner + '\nYou: ' + userAddress);
                     return null;
                 }
 
-                const floorPriceWei = ethers.utils.parseEther(gemData.floorPrice.toString());
+                const floorPriceWei = ethers.parseEther(gemData.floorPrice.toString());
                 const caratStored = Math.round(gemData.caratWeight * 10);
 
+                console.log('Creating NFT listing...');
                 const tx = await contract.createGemstoneListing(
                     gemData.name,
                     gemData.description,
@@ -1432,13 +1447,22 @@
                     floorPriceWei
                 );
 
-                alert(`Creating listing...\n\n${tx.hash.substring(0, 10)}...`);
+                alert(`Creating listing...\n\nHash: ${tx.hash.substring(0, 10)}...\n\nWaiting for confirmation...`);
                 const receipt = await tx.wait();
-                alert('✅ NFT listing created on blockchain!');
+                console.log('✅ NFT created:', receipt);
+                alert('✅ NFT listing created on blockchain!\n\nYou can now see it on Etherscan.');
                 return receipt;
             } catch (error) {
                 console.error('Error:', error);
-                alert('Failed: ' + (error.reason || error.message));
+                let errorMsg = 'Failed: ';
+                if (error.message.includes('user rejected')) {
+                    errorMsg = 'Transaction cancelled by user';
+                } else if (error.reason) {
+                    errorMsg += error.reason;
+                } else {
+                    errorMsg += error.message;
+                }
+                alert(errorMsg);
                 return null;
             }
         }
