@@ -1241,9 +1241,18 @@
             showPage('marketplace');
         }
 
-        // Admin create NFT form - REAL BLOCKCHAIN CREATION
+        // Admin create NFT form - REAL BLOCKCHAIN CREATION WITH DETAILED LOGGING
         document.getElementById('adminCreateForm')?.addEventListener('submit', async function(e) {
             e.preventDefault();
+            
+            console.log('📝 Form submitted!');
+            console.log('Wallet connected:', isConnected);
+            console.log('User address:', userAddress);
+            
+            if (!isConnected) {
+                alert('❌ Wallet Not Connected!\n\nPlease click "Connect Wallet" in the top right corner first.');
+                return;
+            }
             
             const gemData = {
                 name: document.getElementById('adminGemName').value,
@@ -1255,10 +1264,28 @@
                 hasCertification: document.getElementById('adminCertAvailable').value === 'yes',
                 floorPrice: parseFloat(document.getElementById('adminFloorPrice').value)
             };
+            
+            console.log('📋 Form data collected:', gemData);
+            
+            // Validate required fields
+            if (!gemData.name || !gemData.description || !gemData.floorPrice) {
+                alert('❌ Missing Required Fields!\n\nPlease fill in:\n• Gemstone Name\n• Description\n• Floor Price');
+                return;
+            }
+            
+            if (gemData.floorPrice <= 0) {
+                alert('❌ Invalid Floor Price!\n\nFloor price must be greater than 0.');
+                return;
+            }
+            
+            console.log('✅ Validation passed, calling createNFTReal...');
 
             const receipt = await createNFTReal(gemData);
             if (receipt) {
+                console.log('✅ NFT created successfully!');
                 this.reset();
+            } else {
+                console.log('❌ NFT creation failed or was cancelled');
             }
         });
 
@@ -1419,23 +1446,36 @@
         }
 
         async function createNFTReal(gemData) {
+            console.log('🔄 Starting createNFTReal function...');
+            console.log('Gem data:', gemData);
+            
             if (!isConnected) {
-                alert('Please connect wallet first!');
+                alert('❌ Wallet Not Connected!\n\nPlease click "Connect Wallet" first.');
                 return null;
             }
+            
+            console.log('✅ Wallet connected, checking owner...');
 
             try {
-                console.log('Checking if user is owner...');
+                console.log('📞 Calling contract.owner()...');
                 const owner = await contract.owner();
+                console.log('Contract owner:', owner);
+                console.log('Your address:', userAddress);
+                
                 if (owner.toLowerCase() !== userAddress.toLowerCase()) {
-                    alert('Only contract owner can create listings!\n\nOwner: ' + owner + '\nYou: ' + userAddress);
+                    alert('❌ Permission Denied!\n\nOnly the contract owner can create listings.\n\nContract Owner: ' + owner + '\nYour Address: ' + userAddress);
                     return null;
                 }
+                
+                console.log('✅ User is owner, preparing transaction...');
 
                 const floorPriceWei = ethers.parseEther(gemData.floorPrice.toString());
                 const caratStored = Math.round(gemData.caratWeight * 10);
+                
+                console.log('Floor price in Wei:', floorPriceWei.toString());
+                console.log('Carat stored:', caratStored);
 
-                console.log('Creating NFT listing...');
+                console.log('📤 Sending createGemstoneListing transaction...');
                 const tx = await contract.createGemstoneListing(
                     gemData.name,
                     gemData.description,
@@ -1447,21 +1487,38 @@
                     floorPriceWei
                 );
 
-                alert(`Creating listing...\n\nHash: ${tx.hash.substring(0, 10)}...\n\nWaiting for confirmation...`);
+                console.log('✅ Transaction sent! Hash:', tx.hash);
+                alert(`✅ Transaction Submitted!\n\nHash: ${tx.hash.substring(0, 20)}...\n\nWaiting for confirmation...\n\nThis may take 10-30 seconds.`);
+                
+                console.log('⏳ Waiting for transaction confirmation...');
                 const receipt = await tx.wait();
-                console.log('✅ NFT created:', receipt);
-                alert('✅ NFT listing created on blockchain!\n\nYou can now see it on Etherscan.');
+                console.log('✅ Transaction confirmed!', receipt);
+                
+                alert('🎉 SUCCESS!\n\nNFT listing created on blockchain!\n\nTransaction confirmed in block #' + receipt.blockNumber);
                 return receipt;
+                
             } catch (error) {
-                console.error('Error:', error);
-                let errorMsg = 'Failed: ';
+                console.error('❌ Error in createNFTReal:', error);
+                
+                let errorMsg = '❌ Transaction Failed!\n\n';
+                
                 if (error.message.includes('user rejected')) {
-                    errorMsg = 'Transaction cancelled by user';
+                    errorMsg += 'You cancelled the transaction.';
+                } else if (error.code === 'INSUFFICIENT_FUNDS') {
+                    errorMsg += 'Insufficient Funds!\n\n';
+                    errorMsg += 'You need more Sepolia ETH to pay for gas fees.\n\n';
+                    errorMsg += 'Get free Sepolia ETH from:\n';
+                    errorMsg += '• sepoliafaucet.com\n';
+                    errorMsg += '• faucet.quicknode.com';
                 } else if (error.reason) {
-                    errorMsg += error.reason;
+                    errorMsg += 'Reason: ' + error.reason;
+                } else if (error.message) {
+                    errorMsg += 'Error: ' + error.message;
                 } else {
-                    errorMsg += error.message;
+                    errorMsg += 'Unknown error occurred.';
                 }
+                
+                errorMsg += '\n\nCheck browser console (F12) for details.';
                 alert(errorMsg);
                 return null;
             }
